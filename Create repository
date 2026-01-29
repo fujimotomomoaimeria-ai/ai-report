@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI勉強会アンケート結果レポート</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; background-color: #f8fafc; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .card { transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">AI勉強会 アンケート結果レポート</h1>
+            <p class="text-slate-500">2026年1月実施 | 回答数: 18件</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">生産性向上</span>
+                <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium">業務自動化</span>
+                <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">スキルアップ</span>
+            </div>
+        </header>
+
+        <!-- ✨Gemini AI Action Panel -->
+        <section class="mb-10 bg-white p-6 rounded-3xl border-2 border-indigo-100 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-magic text-indigo-500"></i> ✨AIインサイト・アシスタント
+                </h2>
+                <div class="flex gap-2">
+                    <button onclick="generateAISummary()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition">
+                        <i class="fas fa-robot"></i> ✨サマリー生成
+                    </button>
+                    <button onclick="analyzeBarriers()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition">
+                        <i class="fas fa-brain"></i> ✨障壁の分析と解決策
+                    </button>
+                </div>
+            </div>
+            <div id="ai-response-container" class="hidden">
+                <div id="ai-loading" class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl mb-4 text-slate-600 italic">
+                    <i class="fas fa-circle-notch fa-spin"></i> Geminiがデータを分析中<span class="loading-dots"></span>
+                </div>
+                <div id="ai-result" class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+        </section>
+
+        <!-- KPI Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card">
+                <div class="flex items-center gap-4 mb-2 text-blue-600">
+                    <i class="fas fa-clock text-2xl"></i>
+                    <h3 class="font-bold">主な削減時間</h3>
+                </div>
+                <p class="text-3xl font-bold text-slate-800">10〜20時間<span class="text-lg font-normal text-slate-400 ml-1">/月</span></p>
+                <p class="text-sm text-slate-500 mt-2">中央値・最頻値ベース</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card">
+                <div class="flex items-center gap-4 mb-2 text-emerald-600">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                    <h3 class="font-bold">品質向上実感</h3>
+                </div>
+                <p class="text-3xl font-bold text-slate-800">83%<span class="text-lg font-normal text-slate-400 ml-1">以上</span></p>
+                <p class="text-sm text-slate-500 mt-2">「かなり上がった」が多数派</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card">
+                <div class="flex items-center gap-4 mb-2 text-indigo-600">
+                    <i class="fas fa-users text-2xl"></i>
+                    <h3 class="font-bold">アクティブ率</h3>
+                </div>
+                <p class="text-3xl font-bold text-slate-800">72%</p>
+                <p class="text-sm text-slate-500 mt-2">直近10日で6日以上利用</p>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-history text-blue-500"></i> AI利用時間の変化
+                </h3>
+                <div class="chart-container">
+                    <canvas id="usageComparisonChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-bullseye text-emerald-500"></i> 効果が大きかった業務領域
+                </h3>
+                <div class="chart-container">
+                    <canvas id="effectAreaChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-scissors text-orange-500"></i> AIにより「減った」作業
+                </h3>
+                <div class="chart-container">
+                    <canvas id="reducedTaskChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-red-500"></i> 活用の障壁 (上位5つ)
+                </h3>
+                <div class="chart-container">
+                    <canvas id="barrierChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Qualitative Data -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <i class="fas fa-quote-left text-slate-400"></i> 現場のリアルなAI活用事例
+            </h3>
+            <div id="use-cases" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Case studies are here -->
+                <div class="bg-white p-4 rounded-xl border-l-4 border-blue-500 shadow-sm text-sm italic text-slate-600">
+                    「バッドレビューを抽出して物件改善TODOを作成、クライアント報告に活用」
+                </div>
+                <div class="bg-white p-4 rounded-xl border-l-4 border-emerald-500 shadow-sm text-sm italic text-slate-600">
+                    「通知システムの構築や契約書チェック、会議要約で劇的な効率化」
+                </div>
+                <div class="bg-white p-4 rounded-xl border-l-4 border-purple-500 shadow-sm text-sm italic text-slate-600">
+                    「PMSのメッセージから不調内容を抽出し、トラブル傾向を目視確認したい」
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const apiKey = "";
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+
+        async function callGemini(prompt, systemInstruction) {
+            const resultDisplay = document.getElementById('ai-result');
+            const loading = document.getElementById('ai-loading');
+            const container = document.getElementById('ai-response-container');
+
+            container.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            resultDisplay.classList.add('hidden');
+            resultDisplay.textContent = "";
+
+            let retryCount = 0;
+            const maxRetries = 5;
+
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemInstruction }] }
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('API request failed');
+
+                    const data = await response.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    loading.classList.add('hidden');
+                    resultDisplay.classList.remove('hidden');
+                    resultDisplay.textContent = text;
+                    return;
+
+                } catch (error) {
+                    retryCount++;
+                    if (retryCount === maxRetries) {
+                        loading.classList.add('hidden');
+                        resultDisplay.classList.remove('hidden');
+                        resultDisplay.textContent = "エラーが発生しました。時間をおいて再度お試しください。";
+                        return;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+                }
+            }
+        }
+
+        function generateAISummary() {
+            const dataContext = "回答数18件、アクティブ率72%、月間削減時間10-20時間、品質向上実感83%以上。ユースケース不足が最大の障壁。文章作成・要約・分析が主要効果領域。";
+            const prompt = `このAI勉強会アンケートデータを、経営層向けに300文字程度で要約し、重要なインサイトと組織へのメリットを強調してください。データコンテキスト: ${dataContext}`;
+            const system = "あなたはシニアDXコンサルタントです。日本のビジネス文脈で、プロフェッショナルかつ前向きな要約を提供してください。Markdown形式は避け、プレーンテキストで回答してください。";
+            callGemini(prompt, system);
+        }
+
+        function analyzeBarriers() {
+            const dataContext = "障壁: ユースケース不足(9), 業務フローへの未組み込み(5), 時間不足(3), 精度不満(2), 使い方が不明(2)。";
+            const prompt = `AI活用の障壁データ（${dataContext}）に基づき、この組織が「次に打つべき3つの具体的アクション」を提案してください。`;
+            const system = "あなたは人事・IT推進担当のアドバイザーです。具体的で、すぐに実行可能な解決策を箇条書きで提案してください。1.〜 2.〜 3.〜 の形式で回答してください。";
+            callGemini(prompt, system);
+        }
+
+        // --- Chart logic (Original) ---
+        window.onload = function() {
+            new Chart(document.getElementById('usageComparisonChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['30分未満', '30分-1h', '1h-3h', '3h以上', '未使用'],
+                    datasets: [
+                        { label: '半年前', data: [5, 1, 5, 1, 2], backgroundColor: '#cbd5e1' },
+                        { label: '現在', data: [3, 6, 6, 3, 0], backgroundColor: '#3b82f6' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            new Chart(document.getElementById('effectAreaChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['文章作成', '要約・整理', '調査・インプット', '思考・企画', 'データ分析', '業務運用', '開発'],
+                    datasets: [{
+                        label: '活用頻度',
+                        data: [16, 12, 11, 8, 10, 6, 2],
+                        fill: true,
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: '#10b981',
+                        pointBackgroundColor: '#10b981',
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('reducedTaskChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['推敲・言い回し', '0→1叩き台', '要約・議事録', '情報収集', '資料構成', 'データ処理'],
+                    datasets: [{
+                        data: [15, 11, 12, 9, 8, 8],
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#6366f1', '#ec4899', '#8b5cf6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            new Chart(document.getElementById('barrierChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['ユースケース不足', 'フロー未組み込み', '時間がない', '精度不満', '使い方が不明'],
+                    datasets: [{ label: '回答数', data: [9, 5, 3, 2, 2], backgroundColor: '#ef4444' }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        };
+    </script>
+</body>
+</html>
